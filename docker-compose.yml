@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+#  payment-service:
+    # container_name: payment-service
+    # image: payment-service
+    # build: ./
+    # ports:
+    #   - 8080:8080
+  
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: TRE_E_DEMAIS
+      POSTGRES_DB: payment
+    ports:
+      - 15432:5432
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    environment:
+      RABBITMQ_USER: TRE
+      RABBITMQ_PASS: E_DEMAIS 
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+        - rabbitmq_go_net
+
+networks:
+  rabbitmq_go_net:
+    driver: bridge
