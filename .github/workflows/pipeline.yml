@@ -10,7 +10,7 @@ on:
     branches: ["main", "develop"]
 
 jobs:
-  build:
+  Build:
 
     runs-on: ubuntu-latest
     environment:
@@ -28,14 +28,50 @@ jobs:
         distribution: 'temurin'
 
     - name: Build with Maven
-      run: mvn -B package --file pom.xml -DPOSTGRES_HOST=$DB_HOST -DPOSTGRES_PORT=$DB_PORT -DPOSTGRES_DATABASE=$DB -DPOSTGRES_USERNAME=$USER -DPOSTGRES_PASSWORD=$PW -DPORT=$PORT -DRABBITMQ_HOST=$RABBIT_HOST -DRABBITMQ_PORT=$RABBIT_PORT -DRABBITMQ_USERNAME=$USER -DRABBITMQ_PASSWORD=$PW
-      env:
-        DB_HOST: ${{ vars.POSTGRES_HOST }}
-        DB_PORT: ${{ vars.POSTGRES_PORT }}
-        DB: ${{ vars.POSTGRES_DATABASE }}
-        USER: ${{ vars.POSTGRES_USERNAME }}
-        PW: ${{ vars.POSTGRES_PASSWORD }}
-        RABBIT_HOST: ${{ vars.RABBITMQ_HOST }}
-        RABBIT_PORT: ${{ vars.RABBITMQ_PORT }}
-        PORT: ${{ vars.PORT }}
+      run: mvn -B package --file pom.xml 
+      
+  Deploy:
+  
+    needs: Build
+  
+    if: github.ref == 'refs/heads/main'
+    
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+      PROJECT_ID: ${{ vars.PROJECT_ID }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Set up GKE credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: autopilot-cluster-1
+          location: southamerica-west1 
+          
+      - name: Build Docker Image
+        run: docker build -t $IMAGE_NAME:latest .
+          
+      - name: Configure Docker Client
+        run: |
+          gcloud auth configure-docker --quiet
+          
+      - name: Push Docker Image to Container Registry
+        env:
+          GIT_TAG: v0.1.0
+        run: |
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
         
