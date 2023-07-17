@@ -28,12 +28,12 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml -DPOSTGRES_HOST=$DB_HOST -DPOSTGRES_PORT=$DB_PORT -DPOSTGRES_DATABASE=$DB -DPOSTGRES_USERNAME=$USER -DPOSTGRES_PASSWORD=$PW -DPORT=$PORT -DRABBITMQ_HOST=$RABBIT_HOST -DRABBITMQ_PORT=RABBIT_PORT -DRABBITMQ_USERNAME=$USER -DRABBITMQ_PASSWORD=$PW
       env:
-        DB_HOST: ${{vars.POSTGRES_HOST}}
-        DB_PORT: ${{vars.POSTGRES_HOST}}
-        DB: ${{vars.POSTGRES_HOST}}
-        USER: ${{vars.POSTGRES_HOST}}
-        PW: ${{vars.POSTGRES_HOST}}
-        RABBIT_HOST: ${{vars.POSTGRES_HOST}}
-        RABBIT_PORT: ${{vars.POSTGRES_HOST}}
-        PORT: ${{vars.POSTGRES_HOST}}
+        DB_HOST: ${{ vars.POSTGRES_HOST }}
+        DB_PORT: ${{ vars.POSTGRES_PORT }}
+        DB: ${{ vars.POSTGRES_DATABASE }}
+        USER: ${{ vars.POSTGRES_USERNAME }}
+        PW: ${{ vars.POSTGRES_PASSWORD }}
+        RABBIT_HOST: ${{ vars.RABBITMQ_HOST }}
+        RABBIT_PORT: ${{ vars.RABBITMQ_PORT }}
+        PORT: ${{ vars.PORT }}
         
