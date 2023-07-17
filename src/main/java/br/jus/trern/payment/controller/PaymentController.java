@@ -16,15 +16,15 @@ public class PaymentController {
 	@Autowired
 	private PaymentService service;
 	
-	@GetMapping
-	public ResponseEntity<String> paymentGetInfo(@RequestBody PaymentInfo info){
-
-		boolean result = service.pay(info);
-		
-		if(result == true) {
-			return new ResponseEntity<String>(HttpStatus.OK);
-		} else {
-			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
-		}
-	}
+//	@GetMapping
+//	public ResponseEntity<String> paymentGetInfo(@RequestBody PaymentRequest info){
+//
+//		boolean result = service.pay(info);
+//		
+//		if(result == true) {
+//			return new ResponseEntity<String>(HttpStatus.OK);
+//		} else {
+//			return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
+//		}
+//	}
 }
