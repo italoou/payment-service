@@ -13,6 +13,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    environment:
+      name: env
     permissions:
       contents: read
       packages: write
