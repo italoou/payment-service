@@ -92,5 +92,5 @@ jobs:
         run: |
           cd k8s
           kubectl apply -f deployment.yaml
-          kubectl rollout restart deployment golang-api
+          kubectl rollout restart deployment payment-api
         
