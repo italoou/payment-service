@@ -36,6 +36,9 @@ jobs:
   
     if: github.ref == 'refs/heads/main'
     
+    environment:
+      name: env
+      
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ${{ vars.IMAGE_NAME }}
@@ -56,8 +59,8 @@ jobs:
       - name: Set up GKE credentials
         uses: google-github-actions/get-gke-credentials@v1
         with:
-          cluster_name: autopilot-cluster-1
-          location: southamerica-west1 
+          cluster_name: payment-cluster
+          location: us-central1
           
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME:latest .
@@ -65,6 +68,7 @@ jobs:
       - name: Configure Docker Client
         run: |
           gcloud auth configure-docker --quiet
+          gcloud auth configure-docker southamerica-east1-docker.pkg.dev --quiet
           
       - name: Push Docker Image to Container Registry
         env:
