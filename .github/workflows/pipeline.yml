@@ -91,8 +91,6 @@ jobs:
       - name: Update deployment
         run: |
           cd k8s
-          kubectl delete -f service.yaml
-          kubectl apply -f service.yaml
           kubectl apply -f deployment.yaml
           kubectl rollout restart deployment payment-api
         
