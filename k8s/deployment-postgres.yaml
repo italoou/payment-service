@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: payment-database
+  namespace: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-database
+  template:
+    metadata:
+      name: payment-database
+      labels:
+        app: payment-database
+    spec:
+      containers:
+        - name: payment-database
+          image: postgres:latest
+          imagePullPolicy: IfNotPresent
+          ports: 
+          - containerPort: 5432
+          resources:
+            limits:
+              cpu: '2'
+              memory: 2072M
+
