@@ -5,17 +5,20 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.AMQP.Basic;
 
 import br.jus.trern.payment.constants.RabbitMQConstants;
 import br.jus.trern.payment.model.Payment;
 import br.jus.trern.payment.model.PaymentInfo;
 import br.jus.trern.payment.model.PaymentRequest;
+import br.jus.trern.payment.model.PaymentResponse;
 import br.jus.trern.payment.model.TransationState;
 import br.jus.trern.payment.repository.PaymentRepository;
 
@@ -25,11 +28,25 @@ public class PaymentService {
 	private PaymentRepository repository;
 	
 	private ObjectMapper objectMapper;
+	
+	private final RabbitTemplate rabbitTemplate;
 
-	public PaymentService(PaymentRepository repository, ObjectMapper objectMapper) {
+	public PaymentService(PaymentRepository repository, ObjectMapper objectMapper, RabbitTemplate rabbitTemplate) {
 		this.objectMapper = objectMapper;
 		this.repository = repository;
+		this.rabbitTemplate = rabbitTemplate;
 	}
+	
+	public Payment getPayment(Long id) {
+		
+		Optional<Payment> existPayment = repository.findById(id);
+	
+		if(existPayment.isPresent()) {
+			return existPayment.get();
+		}
+		return null;
+	}
+	
 	
 	public boolean pay(PaymentRequest info) {
 
@@ -79,18 +96,34 @@ public class PaymentService {
 		
 		PaymentRequest paymentRequest = objectMapper.readValue(paymentInfo, PaymentRequest.class);
 		
-		Optional<Payment> existPayment = repository.findById(Long.parseLong(paymentRequest.getIdCompra()));
+		Optional<Payment> existPayment = repository.findByIdOfPurchase(paymentRequest.getIdCompra());
 		
 		boolean result = false;
 		
 		if(existPayment.isPresent()) {
 			throw new Exception("payment already process");
 		}else {
-			result = pay(paymentRequest);
+			try {
+				result = pay(paymentRequest);
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		System.out.println("Resultado do processamento: " + result);
 				
+		if(result) {
+			PaymentResponse paymentResponse = new PaymentResponse();
+			
+			paymentResponse.setIdCompra(paymentRequest.getIdCompra());
+			 
+			informarPagamento(paymentResponse);
+		}
 	}
+	
+    private void informarPagamento(PaymentResponse paymentResponse) throws JsonProcessingException {
+        String requestJson = objectMapper.writeValueAsString(paymentResponse);
+        rabbitTemplate.convertAndSend(RabbitMQConstants.FILA_PAGAMENTO_RESPONSE, requestJson);
+    }
 	
 }
